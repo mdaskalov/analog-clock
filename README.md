@@ -4,3 +4,4 @@ Smooth analog clock with rectangular or round face in vanilla JavaScript
 <img src="img/rect.png" width="250">
 <img src="img/round.png" width="250">
 </div>
+<a href="https://mdaskalov.github.io/clock/index.html">demo</a>
