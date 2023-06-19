@@ -1,14 +1,8 @@
 class Clock {
 
-  inside(v, max) {
-    return (v >= -max && v <= max)
-  }
-
   intersect(tan, width, height) {
-    const hor = { x: width, y: width * tan }
-    if (this.inside(hor.y, height)) { return hor }
-    const ver = { x: height / tan, y: height }
-    if (this.inside(ver.x, width)) { return ver }
+    const y = width * tan;
+    return y <= height ? { x: width, y } : { x: height / tan, y: height }
   }
 
   flip(p, x, y) {
