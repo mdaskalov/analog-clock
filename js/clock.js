@@ -5,34 +5,34 @@ class Clock {
     return y <= height ? { x: width, y } : { x: height / tan, y: height }
   }
 
-  drawLine(ctx, p1, p2, width) {
+  drawLine(ctx, x1, y1, x2, y2, width) {
     ctx.beginPath()
     ctx.lineWidth = width
-    ctx.moveTo(p1.x, p1.y)
-    ctx.lineTo(p2.x, p2.y)
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x2, y2)
     ctx.stroke()
   }
 
-  drawText(ctx, p, txt) {
-    ctx.fillText(txt.toString(), p.x, p.y)
+  drawNumber(ctx, x, y, number) {
+    ctx.fillText(number.toString(), x, y)
   }
 
-  drawCircle(ctx, p, r) {
+  drawCircle(ctx, x, y, r) {
     ctx.beginPath()
-    ctx.moveTo(p.x, p.y)
-    ctx.arc(p.x, p.y, r, 0, 2 * Math.PI, true);
+    ctx.moveTo(x, y)
+    ctx.arc(x, y, r, 0, 2 * Math.PI, true);
     ctx.fill()
   }
 
   drawHand(ctx, width, radius, ofs) {
-    this.drawCircle(ctx, { x: 0, y: 0 }, width / 2)
-    this.drawLine(ctx, { x: 0, y: 0 }, { x: 0, y: -ofs }, width / 4)
-    this.drawLine(ctx, { x: 0, y: -ofs }, { x: 0, y: -radius }, width)
+    this.drawCircle(ctx, 0, 0, width / 2)
+    this.drawLine(ctx, 0, 0, 0, -ofs, width / 4)
+    this.drawLine(ctx, 0, -ofs, 0, -radius, width)
   }
 
   drawSecHand(ctx, width, radius, ext) {
-    this.drawCircle(ctx, { x: 0, y: 0 }, width / 2)
-    this.drawLine(ctx, { x: 0, y: ext }, { x: 0, y: -radius }, width / 3)
+    this.drawCircle(ctx, 0, 0, width / 2)
+    this.drawLine(ctx, 0, ext, 0, -radius, width / 3)
   }
 
   drawFace(ctx, width, height, roundFace) {
@@ -49,60 +49,54 @@ class Clock {
     const faceWidth = width / 2 - radius / 50
     const faceHeight = height / 2 - radius / 50
 
-    var ang = 0
-    for (let i = 0; i < 15; i++) { // only 1/4 circle
+    const horOfs = roundFace ? faceRadius : faceHeight
+    const verOfs = roundFace ? faceRadius : faceWidth
+
+    this.drawLine(ctx, 0, -horOfs, 0, longLineLen - horOfs, longLineWidth)
+    this.drawLine(ctx, 0, horOfs, 0, horOfs - longLineLen, longLineWidth)
+    this.drawLine(ctx, verOfs, 0, verOfs - longLineLen, 0, longLineWidth)
+    this.drawLine(ctx, -verOfs, 0, longLineLen - verOfs, 0, longLineWidth)
+
+    this.drawNumber(ctx, 0, digitsOfs - horOfs, 12)
+    this.drawNumber(ctx, 0, horOfs - digitsOfs, 6)
+    this.drawNumber(ctx, verOfs - digitsOfs, 0, 3)
+    this.drawNumber(ctx, digitsOfs - verOfs, 0, 9)
+
+    var ang = inc
+    for (let i = 1; i < 15; i++) { // only 1/4 circle
       const atHour = (i % 5 == 0)
-      const hour = i / 5
       const lineLen = atHour ? longLineLen : shortLineLen
       const lineWidth = atHour ? longLineWidth : shortLineWidth
 
-      var rightBottomStart = { x: 0, y: 0 }
-      var rightBottomEnd = { x: 0, y: 0 }
-      var rightBottomDigitPos = { x: 0, y: 0 }
-      var atZeroStart = 0
-      var atZeroEnd = 0
-      var atZeroDigitPos = 0
+      var startPt = { x: 0, y: 0 }
+      var endPt = { x: 0, y: 0 }
+      var digitPos = { x: 0, y: 0 }
 
       if (roundFace) {
         const cos = Math.cos(ang)
         const sin = Math.sin(ang)
-        rightBottomStart = { x: faceRadius * cos, y: faceRadius * sin }
-        rightBottomEnd = { x: (faceRadius - lineLen) * cos, y: (faceRadius - lineLen) * sin }
-        rightBottomDigitPos = { x: (faceRadius - digitsOfs) * cos, y: (faceRadius - digitsOfs) * sin }
-        atZeroStart = faceRadius
-        atZeroEnd = faceRadius - lineLen
-        atZeroDigitPos = faceRadius - digitsOfs
+        startPt = { x: faceRadius * cos, y: faceRadius * sin }
+        endPt = { x: (faceRadius - lineLen) * cos, y: (faceRadius - lineLen) * sin }
+        digitPos = { x: (faceRadius - digitsOfs) * cos, y: (faceRadius - digitsOfs) * sin }
       }
       else {
         const tan = Math.tan(ang)
-        rightBottomStart = this.intersect(tan, faceWidth, faceHeight)
-        rightBottomEnd = this.intersect(tan, faceWidth - lineLen, faceHeight - lineLen)
-        rightBottomDigitPos = this.intersect(tan, faceWidth - digitsOfs, faceHeight - digitsOfs)
-        atZeroStart = faceHeight
-        atZeroEnd = faceHeight - lineLen
-        atZeroDigitPos = faceHeight - digitsOfs
+        startPt = this.intersect(tan, faceWidth, faceHeight)
+        endPt = this.intersect(tan, faceWidth - lineLen, faceHeight - lineLen)
+        digitPos = this.intersect(tan, faceWidth - digitsOfs, faceHeight - digitsOfs)
       }
 
-      const bottomLeftStart = (i == 0) ? { x: 0, y: atZeroStart } : { x: -rightBottomStart.x, y: rightBottomStart.y }
-      const bottomLeftEnd = (i == 0) ? { x: 0, y: atZeroEnd } : { x: -rightBottomEnd.x, y: rightBottomEnd.y }
-      const leftTopStart = { x: -rightBottomStart.x, y: -rightBottomStart.y }
-      const leftTopEnd = { x: -rightBottomEnd.x, y: -rightBottomEnd.y }
-      const topRightStart = (i == 0) ? { x: 0, y: -atZeroStart } : { x: rightBottomStart.x, y: -rightBottomStart.y }
-      const topRightEnd = (i == 0) ? { x: 0, y: -atZeroEnd } : { x: rightBottomEnd.x, y: -rightBottomEnd.y }
-
-      this.drawLine(ctx, rightBottomStart, rightBottomEnd, lineWidth)
-      this.drawLine(ctx, leftTopStart, leftTopEnd, lineWidth)
-      this.drawLine(ctx, bottomLeftStart, bottomLeftEnd, lineWidth)
-      this.drawLine(ctx, topRightStart, topRightEnd, lineWidth)
+      this.drawLine(ctx, startPt.x, startPt.y, endPt.x, endPt.y, lineWidth)
+      this.drawLine(ctx, -startPt.x, startPt.y, -endPt.x, endPt.y, lineWidth)
+      this.drawLine(ctx, startPt.x, -startPt.y, endPt.x, -endPt.y, lineWidth)
+      this.drawLine(ctx, -startPt.x, -startPt.y, -endPt.x, -endPt.y, lineWidth)
 
       if (atHour) {
-        const bottomLeftDigitPos = (i == 0) ? { x: 0, y: atZeroDigitPos } : { x: -rightBottomDigitPos.x, y: rightBottomDigitPos.y }
-        const leftTopDigitPos = { x: -rightBottomDigitPos.x, y: -rightBottomDigitPos.y }
-        const topRightDigitPos = (i == 0) ? { x: 0, y: -atZeroDigitPos } : { x: rightBottomDigitPos.x, y: -rightBottomDigitPos.y }
-        this.drawText(ctx, rightBottomDigitPos, hour + 3)
-        this.drawText(ctx, bottomLeftDigitPos, i == 0 ? 6 : 9 - hour)
-        this.drawText(ctx, leftTopDigitPos, hour + 9)
-        this.drawText(ctx, topRightDigitPos, i == 0 ? 12 : 3 - hour)
+        const hour = i / 5
+        this.drawNumber(ctx, digitPos.x, digitPos.y, hour + 3)
+        this.drawNumber(ctx, -digitPos.x, digitPos.y, 9 - hour)
+        this.drawNumber(ctx, digitPos.x, -digitPos.y, 3 - hour)
+        this.drawNumber(ctx, -digitPos.x, -digitPos.y, hour + 9)
       }
       ang += inc
     }
