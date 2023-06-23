@@ -7,50 +7,31 @@
       text-align: center;
     }
 
-    #stack {
-      position: relative;
-      margin-top: 10px;
-      margin-left: auto;
-      margin-right: auto;
+    #clock {
+      margin: 10px auto auto auto;
       width: 500px;
       height: 500px;
       resize: both;
       overflow: hidden;
       border: 1px solid lightgray;
     }
-
-    canvas {
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: -1;
-    }
   </style>
 </head>
 
 <body>
   Round: <input id="faceType" type="checkbox" />
-  <div id="stack">
-    <canvas id="face"></canvas>
-    <canvas id="hour"></canvas>
-    <canvas id="min"></canvas>
-    <canvas id="sec"></canvas>
-  </div>
+  <div id="clock"></div>
   <script src="js/clock.js"></script>
   <script>
-    const stack = document.getElementById("stack")
-    const face = document.getElementById("face")
-    const hour = document.getElementById("hour")
-    const min = document.getElementById("min")
-    const sec = document.getElementById("sec")
+    const clockDiv = document.getElementById("clock")
 
     var round = false
-    const clock = new Clock(face, hour, min, sec, stack.offsetWidth, stack.offsetHeight, round)
+    const clock = new Clock(clockDiv, clockDiv.offsetWidth, clockDiv.offsetHeight, round)
 
     const checkbox = document.getElementById('faceType')
     checkbox.addEventListener('change', event => {
       round = event.currentTarget.checked
-      clock.redraw(stack.offsetWidth, stack.offsetHeight, round)
+      clock.redraw(clockDiv.offsetWidth, clockDiv.offsetHeight, round)
     })
 
     const observer = new ResizeObserver(entries => {
@@ -59,7 +40,7 @@
       });
     });
 
-    observer.observe(stack);
+    observer.observe(clockDiv);
 
     setInterval(() => clock.setTime(new Date()), 20)
   </script>

@@ -155,11 +155,25 @@ class Clock {
     this.hour.style.transform = `rotate(${30 * (h % 12) + m / 2 + s / 120}deg)`
   }
 
-  constructor(face, hour, min, sec, width, height, roundFace) {
-    this.face = face
-    this.hour = hour
-    this.min = min
-    this.sec = sec
+  createCanvas(width, height, zIndex) {
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.position = "absolute";
+    canvas.style.left = 0
+    canvas.style.top = 0
+    canvas.style.zIndex = zIndex
+    this.stack.appendChild(canvas)
+    return canvas
+  }
+
+  constructor(stack, width, height, roundFace) {
+    this.stack = stack
+    this.stack.style.position = "relative"
+    this.face = this.createCanvas(width, height, -4)
+    this.hour = this.createCanvas(width, height, -3)
+    this.min = this.createCanvas(width, height, -2)
+    this.sec = this.createCanvas(width, height, -1)
     this.redraw(width, height, roundFace)
     this.setTime(new Date())
   }
