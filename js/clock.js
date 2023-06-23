@@ -117,19 +117,18 @@ class Clock {
     const radius = Math.min(width, height) / 2
 
     const fontSize = radius / 9
-
-    const faceCtx = this.createContext(this.face, width, height)
-    faceCtx.font = `${fontSize}px arial`
-    faceCtx.textAlign = 'center'
-    faceCtx.textBaseline = 'middle'
-    this.drawFace(faceCtx, width, height, roundFace)
-
     const hmRad = radius - radius / 8
     const hmWidth = radius / 15
     const hmOfs = radius / 6
     const sRad = radius - radius / 20
     const sWidth = radius / 20
     const sExt = radius / 6
+
+    const faceCtx = this.createContext(this.face, width, height)
+    faceCtx.font = `${fontSize}px arial`
+    faceCtx.textAlign = 'center'
+    faceCtx.textBaseline = 'middle'
+    this.drawFace(faceCtx, width, height, roundFace)
 
     const hCtx = this.createContext(this.hour, width, height)
     this.drawHand(hCtx, hmWidth, hmRad * 2 / 3, hmOfs)
