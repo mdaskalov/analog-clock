@@ -1,43 +1,39 @@
 class Clock {
 
   intersect(tan, width, height) {
-    const y = width * tan;
-    return y <= height ? { x: width, y } : { x: height / tan, y: height }
+    const x = height * tan
+    const y = width / tan;
+    return { x: x > width ? width : x, y: y > height ? -height : -y }
   }
 
-  drawLine(ctx, x1, y1, x2, y2, width) {
+  drawLine(ctx, start, end, width, flip_x, flip_y) {
     ctx.beginPath()
     ctx.lineWidth = width
-    ctx.moveTo(x1, y1)
-    ctx.lineTo(x2, y2)
+    ctx.moveTo(flip_x === true ? -start.x : start.x, flip_y === true ? -start.y : start.y)
+    ctx.lineTo(flip_x === true ? -end.x : end.x, flip_y === true ? -end.y : end.y)
     ctx.stroke()
   }
 
-  drawNumber(ctx, x, y, number) {
-    ctx.fillText(number.toString(), x, y)
+  drawNumber(ctx, p, number, flip_x, flip_y) {
+    ctx.fillText(number.toString(), flip_x === true ? -p.x : p.x, flip_y === true ? -p.y : p.y)
   }
 
-  drawCircle(ctx, x, y, r) {
+  drawCircle(ctx, p, r) {
     ctx.beginPath()
-    ctx.moveTo(x, y)
-    ctx.arc(x, y, r, 0, 2 * Math.PI, true);
+    ctx.moveTo(p.x, p.y)
+    ctx.arc(p.x, p.y, r, 0, 2 * Math.PI, true);
     ctx.fill()
   }
 
-  drawHand(ctx, width, radius, ofs) {
-    this.drawCircle(ctx, 0, 0, width / 2)
-    this.drawLine(ctx, 0, 0, 0, -ofs, width / 4)
-    this.drawLine(ctx, 0, -ofs, 0, -radius, width)
-  }
-
-  drawSecHand(ctx, width, radius, ext) {
-    this.drawCircle(ctx, 0, 0, width / 2)
-    this.drawLine(ctx, 0, ext, 0, -radius, width / 3)
+  drawHand(ctx, width, radius, ofs, thick) {
+    this.drawLine(ctx, { x: 0, y: thick ? ofs : -ofs }, { x: 0, y: radius }, width / (thick ? 1 : 3))
+    if (thick)
+      this.drawLine(ctx, { x: 0, y: ofs }, { x: 0, y: 0 }, width / 4)
+    this.drawCircle(ctx, { x: 0, y: 0 }, width / 2)
   }
 
   drawFace(ctx, width, height, roundFace) {
     const radius = Math.min(width, height) / 2
-    const inc = (2 * Math.PI / 60) // minute increment
 
     const shortLineLen = radius / 25
     const shortLineWidth = radius / 125
@@ -49,56 +45,51 @@ class Clock {
     const faceWidth = width / 2 - radius / 50
     const faceHeight = height / 2 - radius / 50
 
-    const horOfs = roundFace ? faceRadius : faceHeight
-    const verOfs = roundFace ? faceRadius : faceWidth
+    const hOfs = roundFace ? faceRadius : faceWidth
+    const vOfs = roundFace ? faceRadius : faceHeight
 
-    this.drawLine(ctx, 0, -horOfs, 0, longLineLen - horOfs, longLineWidth)
-    this.drawLine(ctx, 0, horOfs, 0, horOfs - longLineLen, longLineWidth)
-    this.drawLine(ctx, verOfs, 0, verOfs - longLineLen, 0, longLineWidth)
-    this.drawLine(ctx, -verOfs, 0, longLineLen - verOfs, 0, longLineWidth)
+    this.drawLine(ctx, { x: 0, y: -vOfs }, { x: 0, y: longLineLen - vOfs }, longLineWidth)
+    this.drawLine(ctx, { x: hOfs, y: 0 }, { x: hOfs - longLineLen, y: 0 }, longLineWidth)
+    this.drawLine(ctx, { x: 0, y: vOfs }, { x: 0, y: vOfs - longLineLen }, longLineWidth)
+    this.drawLine(ctx, { x: -hOfs, y: 0 }, { x: longLineLen - hOfs, y: 0 }, longLineWidth)
 
-    this.drawNumber(ctx, 0, digitsOfs - horOfs, 12)
-    this.drawNumber(ctx, 0, horOfs - digitsOfs, 6)
-    this.drawNumber(ctx, verOfs - digitsOfs, 0, 3)
-    this.drawNumber(ctx, digitsOfs - verOfs, 0, 9)
+    this.drawNumber(ctx, { x: 0, y: digitsOfs - vOfs }, 12)
+    this.drawNumber(ctx, { x: hOfs - digitsOfs, y: 0 }, 3)
+    this.drawNumber(ctx, { x: 0, y: vOfs - digitsOfs }, 6)
+    this.drawNumber(ctx, { x: digitsOfs - hOfs, y: 0 }, 9,)
 
-    var ang = inc
-    for (let i = 1; i < 15; i++) { // only 1/4 circle
-      const atHour = (i % 5 == 0)
+    for (let min = 1, ang = Math.PI / 30; min < 15; min++, ang += Math.PI / 30) { // 1/4 circle (14 min)
+      const atHour = (min % 5 == 0)
       const lineLen = atHour ? longLineLen : shortLineLen
       const lineWidth = atHour ? longLineWidth : shortLineWidth
 
-      var startPt = { x: 0, y: 0 }
-      var endPt = { x: 0, y: 0 }
-      var digitPos = { x: 0, y: 0 }
-
+      var start, end, digit
       if (roundFace) {
-        const cos = Math.cos(ang)
         const sin = Math.sin(ang)
-        startPt = { x: faceRadius * cos, y: faceRadius * sin }
-        endPt = { x: (faceRadius - lineLen) * cos, y: (faceRadius - lineLen) * sin }
-        digitPos = { x: (faceRadius - digitsOfs) * cos, y: (faceRadius - digitsOfs) * sin }
+        const cos = -Math.cos(ang)
+        start = { x: sin * faceRadius, y: cos * faceRadius }
+        end = { x: sin * (faceRadius - lineLen), y: cos * (faceRadius - lineLen) }
+        digit = { x: sin * (faceRadius - digitsOfs), y: cos * (faceRadius - digitsOfs) }
       }
       else {
         const tan = Math.tan(ang)
-        startPt = this.intersect(tan, faceWidth, faceHeight)
-        endPt = this.intersect(tan, faceWidth - lineLen, faceHeight - lineLen)
-        digitPos = this.intersect(tan, faceWidth - digitsOfs, faceHeight - digitsOfs)
+        start = this.intersect(tan, faceWidth, faceHeight)
+        end = this.intersect(tan, faceWidth - lineLen, faceHeight - lineLen)
+        digit = this.intersect(tan, faceWidth - digitsOfs, faceHeight - digitsOfs)
       }
 
-      this.drawLine(ctx, startPt.x, startPt.y, endPt.x, endPt.y, lineWidth)
-      this.drawLine(ctx, -startPt.x, startPt.y, -endPt.x, endPt.y, lineWidth)
-      this.drawLine(ctx, startPt.x, -startPt.y, endPt.x, -endPt.y, lineWidth)
-      this.drawLine(ctx, -startPt.x, -startPt.y, -endPt.x, -endPt.y, lineWidth)
+      this.drawLine(ctx, start, end, lineWidth)
+      this.drawLine(ctx, start, end, lineWidth, false, true)
+      this.drawLine(ctx, start, end, lineWidth, true, true)
+      this.drawLine(ctx, start, end, lineWidth, true, false)
 
       if (atHour) {
-        const hour = i / 5
-        this.drawNumber(ctx, digitPos.x, digitPos.y, hour + 3)
-        this.drawNumber(ctx, -digitPos.x, digitPos.y, 9 - hour)
-        this.drawNumber(ctx, digitPos.x, -digitPos.y, 3 - hour)
-        this.drawNumber(ctx, -digitPos.x, -digitPos.y, hour + 9)
+        const hour = min / 5
+        this.drawNumber(ctx, digit, hour)
+        this.drawNumber(ctx, digit, 6 - hour, false, true)
+        this.drawNumber(ctx, digit, 6 + hour, true, true)
+        this.drawNumber(ctx, digit, 12 - hour, true, false)
       }
-      ang += inc
     }
   }
 
@@ -122,7 +113,7 @@ class Clock {
     const hmOfs = radius / 6
     const sRad = radius - radius / 20
     const sWidth = radius / 20
-    const sExt = radius / 6
+    const sOfs = radius / 6
 
     const faceCtx = this.createContext(this.face, width, height)
     faceCtx.font = `${fontSize}px arial`
@@ -131,15 +122,15 @@ class Clock {
     this.drawFace(faceCtx, width, height, roundFace)
 
     const hCtx = this.createContext(this.hour, width, height)
-    this.drawHand(hCtx, hmWidth, hmRad * 2 / 3, hmOfs)
+    this.drawHand(hCtx, hmWidth, hmRad * 2 / 3, hmOfs, true)
 
     const mCtx = this.createContext(this.min, width, height)
-    this.drawHand(mCtx, hmWidth, hmRad, hmOfs)
+    this.drawHand(mCtx, hmWidth, hmRad, hmOfs, true)
 
     const sCtx = this.createContext(this.sec, width, height)
     sCtx.strokeStyle = 'red'
     sCtx.fillStyle = 'red'
-    this.drawSecHand(sCtx, sWidth, sRad, sExt)
+    this.drawHand(sCtx, sWidth, sRad, sOfs, false)
   }
 
   setTime(now) {
