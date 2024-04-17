@@ -26,9 +26,9 @@ class Clock {
   }
 
   drawHand(ctx, width, radius, ofs, thick) {
-    this.drawLine(ctx, { x: 0, y: thick ? ofs : -ofs }, { x: 0, y: radius }, width / (thick ? 1 : 3))
+    this.drawLine(ctx, { x: 0, y: thick ? -ofs : ofs }, { x: 0, y: -radius }, width / (thick ? 1 : 3))
     if (thick)
-      this.drawLine(ctx, { x: 0, y: ofs }, { x: 0, y: 0 }, width / 4)
+      this.drawLine(ctx, { x: 0, y: -ofs }, { x: 0, y: 0 }, width / 4)
     this.drawCircle(ctx, { x: 0, y: 0 }, width / 2)
   }
 
