@@ -58,7 +58,7 @@ class Clock {
     this.drawNumber(ctx, { x: 0, y: vOfs - digitsOfs }, 6)
     this.drawNumber(ctx, { x: digitsOfs - hOfs, y: 0 }, 9,)
 
-    for (let min = 1, ang = Math.PI / 30; min < 15; min++, ang += Math.PI / 30) { // 1/4 circle (14 min)
+    for (let min = 1, ang = Math.PI / 30; min < 15; min++, ang += Math.PI / 30) { // 1/4 circle (13 min)
       const atHour = (min % 5 == 0)
       const lineLen = atHour ? longLineLen : shortLineLen
       const lineWidth = atHour ? longLineWidth : shortLineWidth
@@ -134,13 +134,10 @@ class Clock {
   }
 
   setTime(now) {
-    const h = now.getHours()
-    const m = now.getMinutes()
-    const s = now.getSeconds()
     const ms = now.getMilliseconds();
-    // 6° per sec + 6 / 1000 per ms
-    // 6° per min + 6 / 60 per sec + 6 / 60 / 1000 per ms
-    // 30° per hour + 30 / 60 per min + 30 / 60 / 60 per sec + 30 / 60 / 60 / 1000 per ms
+    const s = now.getSeconds() //  6° per sec + 6/1000 per ms
+    const m = now.getMinutes() //  6° per min + 6/60 per sec + 6/60/1000 per ms
+    const h = now.getHours()   // 30° per hour + 30/60 per min + 30/60/60 per sec
     this.sec.style.transform = `rotate(${6 * s + 6 / 1000 * ms}deg)`
     this.min.style.transform = `rotate(${6 * m + s / 10 + ms / 10000}deg)`
     this.hour.style.transform = `rotate(${30 * (h % 12) + m / 2 + s / 120}deg)`
